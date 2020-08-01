@@ -360,9 +360,9 @@ public:
       iy = FONT_SIZE - 1;
 
     if (need_draw(Fonts::get_instance().get_font('d'), ix, iy)) {
-      return Vec4(0, 0, 0, 0.5);
+      return Vec4(0, 0, 0, 0.6);
     } else {
-      return Vec4(1, 1, 1, 0.1);
+      return Vec4(1, 1, 1, 0.3);
     }
   }
 
@@ -403,7 +403,7 @@ public:
 
   static bool transparnet_color_comp(const TransparentColor &a,
                                      const TransparentColor &b) {
-    return a.t < b.t;
+    return a.t > b.t;
   }
 };
 
@@ -424,7 +424,7 @@ Vec4 cal_color(Vec3 &target, Vec3 &camera, vector<Primitive> &primitives) {
 
   sort(colors.begin(), colors.end(), TransparentColor::transparnet_color_comp);
 
-  Vec4 color(0.53, 0.80, 0.98, 0.1);
+  Vec4 color(60.0 / 255.0, 240.0 / 255.0, 165.0 / 255.0, 0.1);
 
   for (auto c = colors.begin(); c != colors.end(); c++) {
     color = (1 - c->color.d) * color + c->color.d * c->color;
