@@ -3,11 +3,14 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <vector>
 
 using namespace std;
 
 #define FILENAME "pic0.ppm"
+
+char c = 'a';
 
 class Vec3 {
 public:
@@ -359,7 +362,7 @@ public:
     if (iy == FONT_SIZE)
       iy = FONT_SIZE - 1;
 
-    if (need_draw(Fonts::get_instance().get_font('d'), ix, iy)) {
+    if (need_draw(Fonts::get_instance().get_font(c), ix, iy)) {
       return Vec4(0, 0, 0, 0.6);
     } else {
       return Vec4(1, 1, 1, 0.3);
@@ -441,19 +444,11 @@ int main() {
   Vec3 u(4, 0, 0);
   Vec3 v(0, 4, 0);
 
-  file.open("./output/" FILENAME, std::fstream::out | fstream::trunc);
-  file << "P3" << endl;
-  file << width << " " << height << endl;
-  file << "255" << endl;
-
   Vec3 vertexs[8] = {Vec3(0.5, 0.5, 0.5),   Vec3(0.5, 0.5, -0.5),
                      Vec3(0.5, -0.5, 0.5),  Vec3(0.5, -0.5, -0.5),
                      Vec3(-0.5, 0.5, 0.5),  Vec3(-0.5, 0.5, -0.5),
                      Vec3(-0.5, -0.5, 0.5), Vec3(-0.5, -0.5, -0.5)};
 
-  Vec3 texture[8] = {
-
-  };
   Mat4x4 mat;
   mat.rotate_x(40 * M_PI / 180)
       .rotate_y(45 * M_PI / 180)
@@ -503,42 +498,53 @@ int main() {
             .set_texture_coor(Vec3(1, 3, 0), Vec3(0, 3, 0), Vec3(0, 2, 0)));
   }
 
-  for (int i = 0; i < width; i++) {
-    for (int j = 0; j < width; j++) {
-      Vec4 color;
+  for (; c <= 'z'; c++) {
+    string s("./output/pic_a.ppm");
+    s[13] = c;
+    cout << s << endl;
+    file.open(s, std::fstream::out | fstream::trunc);
+    file << "P3" << endl;
+    file << width << " " << height << endl;
+    file << "255" << endl;
 
-      Vec3 target;
+    for (int i = width - 1; i >= 0; i--) {
+      for (int j = 0; j < width; j++) {
+        Vec4 color;
 
-      // sample 4 points, (.25, .25), (.25, .75), (.75, .25), (.75, .75)
-      target = base + u / width * ((double)i + 0.25) +
-               v / height * ((double)j + 0.25);
-      color = color + cal_color(target, camera, primitives);
+        Vec3 target;
 
-      target = base + u / width * ((double)i + 0.75) +
-               v / height * ((double)j + 0.25);
-      color = color + cal_color(target, camera, primitives);
+        // sample 4 points, (.25, .25), (.25, .75), (.75, .25), (.75, .75)
+        target = base + u / width * ((double)i + 0.25) +
+                 v / height * ((double)j + 0.25);
+        color = color + cal_color(target, camera, primitives);
 
-      target = base + u / width * ((double)i + 0.25) +
-               v / height * ((double)j + 0.75);
-      color = color + cal_color(target, camera, primitives);
+        target = base + u / width * ((double)i + 0.75) +
+                 v / height * ((double)j + 0.25);
+        color = color + cal_color(target, camera, primitives);
 
-      target = base + u / width * ((double)i + 0.75) +
-               v / height * ((double)j + 0.75);
-      color = color + cal_color(target, camera, primitives);
+        target = base + u / width * ((double)i + 0.25) +
+                 v / height * ((double)j + 0.75);
+        color = color + cal_color(target, camera, primitives);
 
-      color = color / 4;
+        target = base + u / width * ((double)i + 0.75) +
+                 v / height * ((double)j + 0.75);
+        color = color + cal_color(target, camera, primitives);
 
-      // target =
-      //     base + u / width * ((double)i + 0.5) + v / height * ((double)j +
-      //     0.5);
-      // color = color + cal_color(target, camera, primitives);
+        color = color / 4;
 
-      int a = (int)(round(color.a * 255));
-      int b = (int)(round(color.b * 255));
-      int c = (int)(round(color.c * 255));
-      file << a << " " << b << " " << c << "\n";
+        // target =
+        //     base + u / width * ((double)i + 0.5) + v / height * ((double)j +
+        //     0.5);
+        // color = color + cal_color(target, camera, primitives);
+
+        int a = (int)(round(color.a * 255));
+        int b = (int)(round(color.b * 255));
+        int c = (int)(round(color.c * 255));
+        file << a << " " << b << " " << c << "\n";
+      }
     }
+    file.close();
+    cout << "finish render " << c << endl;
   }
-
   return 0;
 }
