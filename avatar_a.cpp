@@ -3,6 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,8 @@ using namespace std;
 #define FILENAME "pic0.ppm"
 
 char c = 'a';
+
+const int PIC_SIZE = 512;
 
 class Vec3 {
 public:
@@ -435,14 +438,29 @@ Vec4 cal_color(Vec3 &target, Vec3 &camera, vector<Primitive> &primitives) {
   return color;
 }
 
+inline Vec3 get_sample_coor(const int x, const int y, const int w) {
+  return Vec3(1.0 / (w * 2.0) + (double)x / (double)w,
+              1.0 / (w * 2.0) + (double)y / (double)w, 0);
+}
+
+std::default_random_engine e;
+std::uniform_real_distribution<double> u(0, 1);
+double range = 4.0 / PIC_SIZE;
+inline Vec3 random_offset() {
+  return Vec3(range * u(e) - range / 2.0, range * u(e) - range / 2.0, 0);
+}
+
 int main() {
   ofstream file;
   Vec3 camera(0, 0, 6);
-  int width = 512;
-  int height = 512;
+  int width = PIC_SIZE;
+  int height = PIC_SIZE;
   Vec3 base(-2, -2, 0);
   Vec3 u(4, 0, 0);
   Vec3 v(0, 4, 0);
+
+  int sample = 2;
+  int randomOffsetTime = 10;
 
   Vec3 vertexs[8] = {Vec3(0.5, 0.5, 0.5),   Vec3(0.5, 0.5, -0.5),
                      Vec3(0.5, -0.5, 0.5),  Vec3(0.5, -0.5, -0.5),
@@ -498,6 +516,8 @@ int main() {
             .set_texture_coor(Vec3(1, 3, 0), Vec3(0, 3, 0), Vec3(0, 2, 0)));
   }
 
+  e.seed(time(NULL));
+
   for (; c <= 'z'; c++) {
     string s("./output/pic_a.ppm");
     s[13] = c;
@@ -510,27 +530,21 @@ int main() {
     for (int i = width - 1; i >= 0; i--) {
       for (int j = 0; j < width; j++) {
         Vec4 color;
-
         Vec3 target;
 
-        // sample 4 points, (.25, .25), (.25, .75), (.75, .25), (.75, .75)
-        target = base + u / width * ((double)i + 0.25) +
-                 v / height * ((double)j + 0.25);
-        color = color + cal_color(target, camera, primitives);
+        for (int k = 0; k < randomOffsetTime; k++) {
+          for (int m = 0; m < sample; m++) {
+            for (int n = 0; n < sample; n++) {
+              Vec3 sample_coor = get_sample_coor(m, n, sample);
+              target = base + u / width * ((double)i + sample_coor.a) +
+                       v / height * ((double)j + sample_coor.b) +
+                       random_offset();
+              color = color + cal_color(target, camera, primitives);
+            }
+          }
+        }
 
-        target = base + u / width * ((double)i + 0.75) +
-                 v / height * ((double)j + 0.25);
-        color = color + cal_color(target, camera, primitives);
-
-        target = base + u / width * ((double)i + 0.25) +
-                 v / height * ((double)j + 0.75);
-        color = color + cal_color(target, camera, primitives);
-
-        target = base + u / width * ((double)i + 0.75) +
-                 v / height * ((double)j + 0.75);
-        color = color + cal_color(target, camera, primitives);
-
-        color = color / 4;
+        color = color / (sample * sample * randomOffsetTime);
 
         // target =
         //     base + u / width * ((double)i + 0.5) + v / height * ((double)j +
@@ -544,7 +558,7 @@ int main() {
       }
     }
     file.close();
-    cout << "finish render " << c << endl;
+    cout << "finish render " << c << " " << time(NULL) << endl;
   }
   return 0;
 }
