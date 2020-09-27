@@ -1,0 +1,11 @@
+check point:
+逆矩阵 Done
+camera 
+mesh
+生成Mesh
+bvh
+...
+
+
+重构
+1. .h .c分离
