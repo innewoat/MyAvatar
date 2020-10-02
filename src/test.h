@@ -1,24 +1,7 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include "vec.h"
-#include <vector>
-#include <deque>
-
-class Mesh
-{
-public:
-    Mat4x4 objectToWorld;
-
-    int nTriagles;
-    std::vector<Vec3> vertices;
-    std::vector<int> triangles;
-    // todo: texture
-
-    Mesh()
-    {
-    }
-};
+#include "base.h"
 
 namespace test
 {
@@ -98,7 +81,7 @@ namespace test
         }
     }
 
-    void generate_triangles(Mesh &mesh)
+    void generate_triangles(std::vector<Triangle> &triangles)
     {
         int n = 3;
         std::deque<Vec3> faces;
@@ -176,6 +159,13 @@ namespace test
                 pop_cube(cubes);
             }
         }
+
+        // for each face, split to 2 faces
+        for (int i = 0; i < faces.size() / 4; i++)
+        {
+            triangles.push_back(Triangle(faces[0], faces[1], faces[2]));
+            triangles.push_back(Triangle(faces[2], faces[3], faces[0]));
+            pop_face(faces);
+        }
     };
 } // namespace test
-#endif
